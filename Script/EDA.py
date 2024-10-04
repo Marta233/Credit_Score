@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
+import math
 class Eda:
     def __init__(self, data):
         self.data = data
@@ -62,3 +63,75 @@ class Eda:
 
         plt.tight_layout()
         plt.show()
+    def visualize_categorical_selected_features(self, attributes, figsize=(12, 8)):
+        """
+        Function to create bar plots in subplots for selected attributes.
+        
+        Parameters:
+        attributes (list): List of columns (attributes) to plot.
+        figsize (tuple): Size of the figure. Default is (10, 5).
+        """
+        
+        # Ensure the number of attributes matches the available subplots (3 in this case)
+        if len(attributes) != 3:
+            print("This function is designed to handle exactly 3 attributes.")
+            return
+        
+        # Create subplots: 2 subplots in the first row, 1 in the second
+        fig, axes = plt.subplots(nrows=2, ncols=2, figsize=figsize)
+        
+        # Hide the second plot in the second row (we only need one plot in that row)
+        axes[1, 1].axis('off')  # Turn off the fourth subplot
+        
+        # Flatten the axes for easy iteration
+        axes = axes.flatten()
+        
+        # Loop through the selected attributes and plot
+        for i, attribute in enumerate(attributes):
+            self.data[attribute].value_counts().plot(kind='bar', ax=axes[i])
+            axes[i].set_title(f'Bar plot of {attribute}')
+            axes[i].set_xlabel(attribute)
+            axes[i].set_ylabel('Count')
+        
+        # Adjust layout
+        plt.tight_layout()
+        plt.show()
+    def visualize_outliers_with_boxplot(self, attributes, figsize=(10, 5)):
+        """
+        Function to create box plots to detect outliers for selected attributes.
+        
+        Parameters:
+        attributes (list): List of numerical columns (attributes) to plot box plots.
+        figsize (tuple): Size of the figure. Default is (10, 5).
+        """
+        
+        # Number of attributes
+        num_attrs = len(attributes)
+        
+        # Dynamically determine rows and columns for subplots
+        ncols = 2  # For example, we choose to have 2 columns
+        nrows = (num_attrs // ncols) + (num_attrs % ncols > 0)
+        
+        # Create subplots for the box plots
+        fig, axes = plt.subplots(nrows=nrows, ncols=ncols, figsize=figsize)
+        axes[1, 1].axis('off')  # Turn off the fourth subplot
+        
+        # Flatten axes to simplify iteration
+        axes = axes.flatten() if num_attrs > 1 else [axes]
+        
+        # Loop through each attribute and create a box plot
+        for i, attribute in enumerate(attributes):
+            if i < len(axes):  # Ensure there are enough axes
+                sns.boxplot(data=self.data, x=attribute, ax=axes[i])
+                axes[i].set_title(f'Box plot of {attribute}')
+                axes[i].set_xlabel(attribute)
+            else:
+                axes[i].axis('off')  # Hide unused axes if fewer attributes
+        
+        # Adjust layout to avoid overlap
+        plt.tight_layout()
+        plt.show()
+
+
+
+
