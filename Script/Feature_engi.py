@@ -1,6 +1,6 @@
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
-
+from sklearn.preprocessing import StandardScaler
 
 class Feature_Engineering:
     def __init__(self, data):
@@ -64,3 +64,21 @@ class Feature_Engineering:
         for attribute in attributes:
             self.label_encode(attribute)
         return self.data
+    def numeric_feature_scaling(self, attributes):
+        # Create a StandardScaler object
+        scaler = StandardScaler()
+        
+        # Select only the specified numeric attributes
+        selected_data = self.data[attributes]
+
+        # Fit the scaler to the data and transform it
+        scaled_data = scaler.fit_transform(selected_data)
+
+        # Convert the scaled data back into a DataFrame
+        scaled_df = pd.DataFrame(scaled_data, columns=selected_data.columns)
+
+        # Assign the scaled data back to the original dataframe for the selected attributes
+        self.data[attributes] = scaled_df
+
+        # Print the scaled dataframe for confirmation
+        print(scaled_df)
