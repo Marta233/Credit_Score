@@ -8,7 +8,7 @@ from typing import List
 app = FastAPI()
 
 # Define the path to your saved model here
-MODEL_PATH = "random_forest_model.pkl"  
+MODEL_PATH = "random_forest_model.pkl"
 
 # Define the data model for incoming test data
 class TestData(BaseModel):
@@ -21,6 +21,18 @@ def calculate_credit_score(probability: float) -> float:
     Score_max = 900
     score = Score_min + (1 - probability) * (Score_max - Score_min)
     return score
+
+def get_credit_score_label(score: float) -> int:
+    if score < 601:
+        return 1  # High Risk
+    elif 601 <= score < 701:
+        return 2  # Moderate Risk
+    elif 701 <= score < 801:
+        return 3  # Low Risk
+    elif 801 <= score <= 900:
+        return 4  # Very Low Risk
+    else:
+        raise ValueError("Score out of range")
 
 def predict_probabilities(test_data: pd.DataFrame) -> pd.DataFrame:
     # Load the saved model
@@ -52,11 +64,18 @@ def predict_probabilities(test_data: pd.DataFrame) -> pd.DataFrame:
     # Create DataFrame with predicted probabilities
     results_df = pd.DataFrame({
         'CustomerId': customer_id.values if customer_id is not None else None,
-        'Prob_Good_Credit': predicted_probabilities[:, 1]  # Probability of class 1
+        'Prob_Good': predicted_probabilities[:, 1]  # Probability of class 1
     })
 
     # Calculate credit scores based on the probabilities
-    results_df['Credit_Score'] = results_df['Prob_Good_Credit'].apply(calculate_credit_score)
+    results_df['Credit_Score'] = results_df['Prob_Good'].apply(calculate_credit_score)
+
+    # Assign credit score labels
+    results_df['Credit_Score_Label'] = results_df['Credit_Score'].apply(get_credit_score_label)
+
+    # Print the results for debugging purposes (optional)
+    print("Predicted Probabilities, Credit Scores, and Labels:")
+    print(results_df)
 
     return results_df
 
