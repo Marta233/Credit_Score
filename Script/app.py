@@ -8,8 +8,9 @@ from typing import List
 app = FastAPI()
 
 # Define the path to your saved model here
-MODEL_PATH = "random_forest_model.pkl"  # Update this with your actual model path
+MODEL_PATH = "random_forest_model.pkl"  
 
+# Define the data model for incoming test data
 class TestData(BaseModel):
     CustomerId: str
     # Define other fields that your model expects
@@ -27,15 +28,20 @@ def predict_probabilities(test_data: pd.DataFrame) -> pd.DataFrame:
 
     # Get the feature names from the model
     if hasattr(model, 'feature_names_in_'):
-        feature_names = set(model.feature_names_in_)  # Use set for intersection
+        feature_names = model.feature_names_in_
     else:
-        feature_names = set(model.get_feature_names_out())
+        feature_names = model.get_feature_names_out()
 
     # Drop 'CustomerId' from the test data for predictions
     test_data_filtered = test_data.drop(columns=['CustomerId'], errors='ignore')
 
-    # Select only the features that were used to fit the model
-    test_data_filtered = test_data_filtered[test_data_filtered.columns.intersection(feature_names)]
+    # Ensure the test dataset only contains features present in the model's training
+    missing_features = set(feature_names) - set(test_data_filtered.columns)
+    if missing_features:
+        raise ValueError(f"Missing features in test data: {missing_features}")
+
+    # Filter the test dataset to include only the necessary features in the correct order
+    test_data_filtered = test_data_filtered[feature_names]
 
     # Store CustomerId separately
     customer_id = test_data['CustomerId'] if 'CustomerId' in test_data.columns else None
@@ -43,14 +49,14 @@ def predict_probabilities(test_data: pd.DataFrame) -> pd.DataFrame:
     # Predict probabilities on the filtered test data
     predicted_probabilities = model.predict_proba(test_data_filtered)
 
-    # Extract probabilities for class 1 (positive class)
+    # Create DataFrame with predicted probabilities
     results_df = pd.DataFrame({
         'CustomerId': customer_id.values if customer_id is not None else None,
-        'Prob_Class_1': predicted_probabilities[:, 1]  # Only class 1 probabilities
+        'Prob_Good_Credit': predicted_probabilities[:, 1]  # Probability of class 1
     })
 
     # Calculate credit scores based on the probabilities
-    results_df['Credit_Score'] = results_df['Prob_Class_1'].apply(calculate_credit_score)
+    results_df['Credit_Score'] = results_df['Prob_Good_Credit'].apply(calculate_credit_score)
 
     return results_df
 

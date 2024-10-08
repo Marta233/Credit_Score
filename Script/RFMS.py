@@ -96,13 +96,22 @@ class RFMS:
 
         self.rfms = merged_rfms  # Store the merged RFMS result in the class attribute
         return merged_rfms
+    def customer_score_RFMS(self):
+        scaler = StandardScaler()
+        self.rfms['RFMS_Score_Standardized'] = scaler.fit_transform(self.rfms[['RFMS_Score']])
+        
+        # Calculate the median score to use as a threshold
+        threshold = 0.01
+        # Classify users as Good (high RFMS) or Bad (low RFMS)
+        self.rfms['CreditRiskLabel'] = np.where(self.rfms['RFMS_Score_Standardized'] >= threshold, 'Good', 'Bad')
+        
+        return self.rfms
 
     def Plot_RFMS_distribution(self):
         # Plotting the distribution of RFMS Score
         if self.rfms is None:
             print("RFMS score has not been calculated. Please run Customer_RFMS first.")
             return
-        
         plt.figure(figsize=(10, 6))
         plt.hist(self.rfms['RFMS_Score'], bins=20, alpha=0.7, color='blue', label='RFMS Score')
         plt.title('RFMS Score Distribution')
@@ -110,12 +119,6 @@ class RFMS:
         plt.ylabel('Count')
         plt.legend()
         plt.show()
-
-    def customer_score_RFMS(self):
-        # Classify users as Good (high RFMS) or Bad (low RFMS)
-        threshold = self.rfms['RFMS_Score'].median()  # Use the median as the threshold
-        self.rfms['CreditRiskLabel'] = np.where(self.rfms['RFMS_Score'] >= threshold, 'Good', 'Bad')
-        return self.rfms
     def plot_creditrisklabel(self):
         if self.rfms is None:
             print("RFMS score has not been calculated. Please run Customer_RFMS first.")
@@ -126,6 +129,18 @@ class RFMS:
         plt.title('Credit Risk Label Distribution')
         plt.xlabel('Credit Risk Label')
         plt.ylabel('Count')
+        plt.show()
+    def Plot_RFMS_distribution(self):
+        if self.rfms is None:
+            print("RFMS score has not been calculated. Please run Customer_RFMS first.")
+            return
+        plt.figure(figsize=(10, 6))
+        plt.hist(self.rfms['RFMS_Score_Standardized'], bins=30, alpha=0.7, color='blue', label='Standardized RFMS Score')
+        plt.title('Standardized RFMS Score Distribution')
+        plt.xlabel('Standardized RFMS Score')
+        plt.ylabel('Count')
+        plt.axvline(x=0, color='red', linestyle='--', label='Initial Threshold')
+        plt.legend()
         plt.show()
     def merge_two_data(self, data1,data2):
         # Merge two datasets based on CustomerId

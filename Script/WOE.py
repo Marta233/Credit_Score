@@ -3,6 +3,7 @@ import numpy as np
 from monotonic_binning.monotonic_woe_binning import Binning
 import scorecardpy as sc
 from sklearn.preprocessing import StandardScaler
+import matplotlib.pyplot as plt
 
 class WOEAnalysis:
     def __init__(self, df, target):
@@ -63,9 +64,14 @@ class WOEAnalysis:
         # Display the adjusted bins
         print("Adjusted Binning Results:")
         print(bins_adj)
-
-        # Plot the WoE values
-        sc.woebin_plot(bins_adj)
+        # Assume bins_adj is already created
+        plt.figure(figsize=(12, 8))  # Set the figure size
+        sc.woebin_plot(bins_adj)  # Create the WoE plot
+        plt.xticks(rotation=45)  # Rotate x-axis labels for better visibility
+        plt.title("WoE Binning Plot")  # Optional: Add a title
+        plt.tight_layout()  # Adjust layout
+        plt.subplots_adjust(bottom=0.2)  # Adjust bottom margin if needed
+        plt.show()  # Display the plot
 
     def woeval(self, train):
         """Convert a DataFrame into WoE values based on adjusted bins."""
